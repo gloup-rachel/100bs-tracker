@@ -1,0 +1,6 @@
+{
+  "name": "100bs-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "백년밥상 품절·재입고 트래커 (Vercel + Upstash Redis)"
+}
