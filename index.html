@@ -398,7 +398,7 @@ async function pushState(){
       alert('다른 곳에서 먼저 저장된 내용이 있습니다.\n(서버 최종 수정: '+(j.serverUpdatedAt||'')+')\n\n덮어쓰지 않았습니다. 새로고침해서 최신 상태를 받은 뒤 다시 수정해 주세요.');
       return;
     }
-    if(!r.ok){ setSaveBadge('저장 실패','bad'); return; }
+    if(!r.ok){ let em=''; try{ em=(await r.json()).error||''; }catch(e){} console.error('[save fail]', r.status, em); setSaveBadge('저장 실패'+(em?' · '+String(em).slice(0,48):' · '+r.status),'bad'); return; }
     const j=await r.json();
     PREV_UPDATED=j.updatedAt||'';
     LAST_INFO=(new Date(PREV_UPDATED)).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · Rachel';
