@@ -273,11 +273,11 @@ textarea{width:100%;height:190px;font-family:ui-monospace,Menlo,monospace;font-s
         <span class="chk chsel" data-c="스마트스토어">스마트스토어</span>
         <span class="chk chsel" data-c="기타">기타 (쿠팡·토스)</span>
       </div>
-      <input type="text" id="q" placeholder="상품명 · 공급사 · 상품코드로 검색">
-      <div class="hint">발주모아 등록 상품 <b id="tot"></b>건 · <b>같은 제품도 채널별로 따로 등록</b>돼 있습니다 (자사몰만 품절인 경우 자사몰 행만 추가). 추가하면 <b>바로 품절 상태</b>로 등록됩니다.</div>
+      <input type="text" id="q" placeholder="상품명 · 공급사 · 상품코드로 검색 (Enter로 결과 전체 추가)">
+      <div class="hint">발주모아 등록 상품 <b id="tot"></b>건 · <b>같은 제품도 채널별로 따로 등록</b>돼 있어요 (자사몰만 품절이면 자사몰 행만 추가). 추가하면 <b>바로 품절 상태</b>로 등록됩니다. <b>검색 결과를 한 번에 담으려면 Enter</b> 또는 아래 [모두 추가]를 누르세요.</div>
     </div>
     <div class="mbody" id="picks"></div>
-    <div class="mfoot"><button onclick="closeAdd()">닫기</button></div>
+    <div class="mfoot"><button id="addall" class="primary" onclick="addAllPicks()">검색 결과 모두 추가</button><button onclick="closeAdd()">닫기</button></div>
   </div>
 </div>
 
@@ -488,7 +488,7 @@ function renderSummary(){
   let h='<div class="sum"><div class="sh"><b>요약</b>'
    +'<span class="k">자사몰 '+c['카페24']+' · 스마트스토어 '+c['스마트스토어']+' · 기타 '+c['기타']+'</span>'
    +(noEta?'<span class="stt out">입고 예정일 미입력 '+noEta+'건</span>':'')
-   +'<span style="flex:1"></span><span class="k">보기 전용 · 수정은 아래 카드에서</span></div>'
+   +'<span style="flex:1"></span><span class="k">'+(EDITABLE?'키워드 · 입고 예정일을 여기서 바로 수정할 수 있어요':'보기 전용 · 수정은 아래 카드에서')+'</span></div>'
    +'<table class="st"><tr><th style="width:96px">채널</th><th>캘린더 키워드</th>'
    +'<th style="width:100px">상태</th><th style="width:200px">입고 예정일</th></tr>';
   let curCh=null;
@@ -500,14 +500,22 @@ function renderSummary(){
     h+='<tr data-id="'+it.id+'">'
      +'<td><span class="badge '+(CHB[p.ch]||'b-etc')+'">'+esc(chLabel(ch))+'</span></td>'
      +'<td class="kwcell" title="'+esc(p.n)+'">'
-       +(kws(it).length?esc(kws(it).join(' · ')):'<span class="mini warn2">키워드 없음</span>')+'</td>'
+       +'<input type="text" class="s-kw" value="'+esc(it.kw||'')+'" placeholder="키워드 입력"'+(EDITABLE?'':' disabled')+'></td>'
      +'<td><span class="stt '+it.st+'">'+L[it.st]+'</span></td>'
      +'<td>'+(it.st==='ok'
          ? '<span class="mini">재입고 완료</span>'
-         : (it.eta?'<b>'+md(it.eta)+'</b> <span class="mini">'+ddText(it)+'</span>':'<span class="mini warn2">미입력</span>'))+'</td>'
+         : '<input type="date" class="s-eta" value="'+(it.eta||'')+'"'+(EDITABLE?'':' disabled')+'>'
+           +(it.eta?' <span class="mini">'+ddText(it)+'</span>':' <span class="mini warn2" style="margin-left:6px">미입력</span>'))+'</td>'
      +'</tr>';
   });
   el.innerHTML=h+'</table></div>';
+  if(EDITABLE) el.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const it=S.items.find(x=>x.id===tr.dataset.id); if(!it)return;
+    const kw=tr.querySelector('.s-kw');
+    if(kw)kw.onchange=e=>{ it.kw=e.target.value; save(); setTimeout(render,0); };
+    const eta=tr.querySelector('.s-eta');
+    if(eta)eta.onchange=e=>{ it.eta=e.target.value; addLog(short(it)+' 재입고예정 '+(e.target.value||'-')); save(); setTimeout(render,0); };
+  });
 }
 function ddText(it){
   const d=diffDays(todayStr(),it.eta);
@@ -764,6 +772,7 @@ document.getElementById('btn-add').onclick=()=>{document.getElementById('m-add')
 function closeAdd(){document.getElementById('m-add').classList.remove('on');}
 document.getElementById('m-add').onclick=e=>{if(e.target.id==='m-add')closeAdd();};
 document.getElementById('q').oninput=e=>drawPicks(e.target.value);
+document.getElementById('q').onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); addAllPicks(); } };
 function drawPicks(q){
   q=q.trim().toLowerCase(); const have=new Set(S.items.map(i=>i.id));
   const r=CATALOG.filter(p=>(pickCh==='all'||chOf(p)===pickCh)
@@ -783,6 +792,28 @@ function drawPicks(q){
     addLog('['+chLabel(chOf(p))+'] '+p.n.slice(0,18)+' 품절 등록');
     save(); render(); drawPicks(document.getElementById('q').value);
   });
+  const addable=currentPickList().length;
+  const ab=document.getElementById('addall');
+  if(ab){ ab.disabled=!addable; ab.textContent=addable?('검색 결과 '+addable+'건 모두 추가'):'추가할 결과 없음'; }
+}
+/* 현재 검색어·채널 필터에 걸리면서 아직 안 담긴 상품 전부 */
+function currentPickList(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  const have=new Set(S.items.map(i=>i.id));
+  return CATALOG.filter(p=>(pickCh==='all'||chOf(p)===pickCh)
+    &&(!q||p.n.toLowerCase().includes(q)||(p.sp||'').toLowerCase().includes(q)||p.id.toLowerCase().includes(q))
+    && !have.has(p.id));
+}
+/* 검색 결과를 한 번에 품절로 등록 */
+function addAllPicks(){
+  if(!EDITABLE) return;
+  const list=currentPickList();
+  if(!list.length){ alert('추가할 새 상품이 없어요.'); return; }
+  const q=document.getElementById('q').value.trim();
+  if(list.length>1 && !confirm(list.length+'건을 모두 품절로 등록할까요?'+(q?'\n("'+q+'" 검색 결과)':''))) return;
+  list.forEach(p=>S.items.push({id:p.id,st:'out',since:todayStr(),eta:'',memo:'',kw:(p.kw||[]).join(', '),done:[],doneAt:{},wasOut:true,open:true}));
+  addLog(list.length+'건 일괄 품절 등록'+(q?' ("'+q+'")':''));
+  save(); render(); drawPicks(document.getElementById('q').value);
 }
 document.getElementById('btn-fold').onclick=()=>setAllOpen(false);
 document.getElementById('btn-unfold').onclick=()=>setAllOpen(true);
