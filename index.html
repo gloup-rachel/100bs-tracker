@@ -4,20 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>백년밥상 품절·재입고 트래커</title>
-<link rel="stylesheet" as="style" crossorigin
-  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="preset-system.css">
 <style>
-/* 품절·재입고 트래커 — preset-system.css 기반 뉴트럴 리스킨.
-   상태 팔레트(초록/빨강/주황)는 유지하고 베이스 크롬만 뉴트럴로 정렬 */
 :root{
-  --ink:#0d0d0d;--sub:#52525b;--line:#ececec;--bg:#f7f7f8;--card:#fff;
-  --green:#2f6b4f;--green-l:#eef4f0;--red:#c0392b;--red-l:#fbeceb;
-  --amber:#b7791f;--amber-l:#fbf3e4;--gray-l:#f0f0f1;--blue:#2c5282;--blue-l:#ebf2fa;
+  --ink:#1a1a1a;--sub:#6b6b6b;--line:#e5e2dc;--bg:#f7f6f2;--card:#fff;
+  --green:#2f6b4f;--green-l:#eaf3ee;--red:#c0392b;--red-l:#fdecea;
+  --amber:#b7791f;--amber-l:#fdf6e3;--gray-l:#f1f0ed;--blue:#2c5282;--blue-l:#ebf2fa;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
- font-family:var(--font-sans);
+ font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
  line-height:1.6;-webkit-font-smoothing:antialiased;font-size:15px}
 .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 120px}
 header{position:sticky;top:0;z-index:50;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:18px}
@@ -210,22 +205,19 @@ textarea{width:100%;height:190px;font-family:ui-monospace,Menlo,monospace;font-s
 <div class="wrap" id="app" style="display:none">
 
 <header>
-  <div class="htop" style="align-items:center">
-    <span class="ps-mark" style="width:28px;height:28px;border-radius:8px">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18M4 11a8 8 0 0 0 16 0M8 11V7a1 1 0 0 1 1-1M12 11V5M16 11V7a1 1 0 0 0-1-1"/></svg>
-    </span>
+  <div class="htop">
     <h1>품절 · 재입고 트래커</h1>
     <span class="owner">품절 관리 담당 · Rachel</span><span id="rolebadge"></span><span class="sb" id="savebadge"></span>
     <span class="today" id="today"></span>
   </div>
   <div class="tabs">
-    <div class="tab on" data-v="list">트래커</div>
-    <div class="tab" data-v="cal">캘린더</div>
+    <div class="tab on" data-v="list">📋 트래커</div>
+    <div class="tab" data-v="cal">🗓 캘린더</div>
   </div>
   <div class="counts" id="counts">
-    <div class="cnt r on" data-f="out">품절 <b id="c-out">0</b></div>
-    <div class="cnt a on" data-f="soon">입고예정 <b id="c-soon">0</b></div>
-    <div class="cnt g on" data-f="ok">원복 확인 <b id="c-ok">0</b></div>
+    <div class="cnt r on" data-f="out">🔴 품절 <b id="c-out">0</b></div>
+    <div class="cnt a on" data-f="soon">🟠 입고예정 <b id="c-soon">0</b></div>
+    <div class="cnt g on" data-f="ok">🟢 원복 확인 <b id="c-ok">0</b></div>
     <span style="width:10px"></span>
     <div class="cnt ch on" data-c="카페24">자사몰 <b id="c-c24">0</b></div>
     <div class="cnt ch on" data-c="스마트스토어">스마트스토어 <b id="c-ss">0</b></div>
@@ -243,7 +235,7 @@ textarea{width:100%;height:190px;font-family:ui-monospace,Menlo,monospace;font-s
     <button id="btn-fold">▸ 모두 접기</button>
     <button id="btn-unfold">▾ 모두 펼치기</button>
     <button id="btn-reload">↻ 새로고침</button>
-    <button id="btn-copy">품절 현황 복사</button>
+    <button id="btn-copy">📋 품절 현황 복사</button>
     <button id="btn-io">↕ 데이터 백업·복원</button>
   </div>
   <div id="board"></div>
@@ -254,15 +246,13 @@ textarea{width:100%;height:190px;font-family:ui-monospace,Menlo,monospace;font-s
   <div class="bar" style="align-items:center">
     <div id="calnav" style="display:flex;gap:8px;align-items:center"></div>
     <span style="flex:1"></span>
-    <button id="btn-cal">캘린더 업데이트</button>
+    <button id="btn-cal">🗓 캘린더 업데이트</button>
   </div>
   <div class="calbar" id="calbar"></div>
   <div id="calgrid"></div>
-  <div class="hint" style="margin-top:12px">색이 붙은 항목은 추적 중인 상품과 매칭된 일정이에요. <b style="color:#c0392b">빨강 = 품절</b> · <b style="color:#b7791f">주황 = 입고예정</b> · <b style="color:#2f6b4f">초록 = 정상</b>. 매칭은 상품별 <b>캘린더 키워드</b>로 이뤄지며, 트래커 카드에서 수정할 수 있습니다.</div>
+  <div class="hint" style="margin-top:12px">색이 붙은 항목은 추적 중인 상품과 매칭된 일정입니다 — <b style="color:#c0392b">빨강 = 품절</b> · <b style="color:#b7791f">주황 = 입고예정</b> · <b style="color:#2f6b4f">초록 = 정상</b>. 매칭은 상품별 <b>캘린더 키워드</b>로 이뤄지며, 트래커 카드에서 수정할 수 있습니다.</div>
 </div>
 </div>
-
-<footer class="ps-footer" style="margin-top:32px"><span>Created by FRISAT</span></footer>
 
 <div class="mask" id="m-add">
   <div class="modal">
@@ -273,11 +263,11 @@ textarea{width:100%;height:190px;font-family:ui-monospace,Menlo,monospace;font-s
         <span class="chk chsel" data-c="스마트스토어">스마트스토어</span>
         <span class="chk chsel" data-c="기타">기타 (쿠팡·토스)</span>
       </div>
-      <input type="text" id="q" placeholder="상품명 · 공급사 · 상품코드로 검색 (Enter로 결과 전체 추가)">
-      <div class="hint">발주모아 등록 상품 <b id="tot"></b>건 · <b>같은 제품도 채널별로 따로 등록</b>돼 있어요 (자사몰만 품절이면 자사몰 행만 추가). 추가하면 <b>바로 품절 상태</b>로 등록됩니다. <b>검색 결과를 한 번에 담으려면 Enter</b> 또는 아래 [모두 추가]를 누르세요.</div>
+      <input type="text" id="q" placeholder="상품명 · 공급사 · 상품코드로 검색">
+      <div class="hint">발주모아 등록 상품 <b id="tot"></b>건 · <b>같은 제품도 채널별로 따로 등록</b>돼 있습니다 (자사몰만 품절인 경우 자사몰 행만 추가). 추가하면 <b>바로 품절 상태</b>로 등록됩니다.</div>
     </div>
     <div class="mbody" id="picks"></div>
-    <div class="mfoot"><button id="addall" class="primary" onclick="addAllPicks()">검색 결과 모두 추가</button><button onclick="closeAdd()">닫기</button></div>
+    <div class="mfoot"><button onclick="closeAdd()">닫기</button></div>
   </div>
 </div>
 
@@ -398,7 +388,7 @@ async function pushState(){
       alert('다른 곳에서 먼저 저장된 내용이 있습니다.\n(서버 최종 수정: '+(j.serverUpdatedAt||'')+')\n\n덮어쓰지 않았습니다. 새로고침해서 최신 상태를 받은 뒤 다시 수정해 주세요.');
       return;
     }
-    if(!r.ok){ let em=''; try{ em=(await r.json()).error||''; }catch(e){} console.error('[save fail]', r.status, em); setSaveBadge('저장 실패'+(em?' · '+String(em).slice(0,48):' · '+r.status),'bad'); return; }
+    if(!r.ok){ setSaveBadge('저장 실패','bad'); return; }
     const j=await r.json();
     PREV_UPDATED=j.updatedAt||'';
     LAST_INFO=(new Date(PREV_UPDATED)).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · Rachel';
@@ -450,7 +440,7 @@ function renderAlert(){
   if(!risk.length){a.className='alert';return;}
   risk.sort((x,y)=>x.dd-y.dd);
   a.className='alert on';
-  a.innerHTML='<b>앞으로 7일 안에 편성된 일정 '+risk.length+'건이 품절 상품이에요.</b><ul>'
+  a.innerHTML='<b>⚠ 앞으로 7일 안에 편성된 일정 '+risk.length+'건이 품절 상품입니다.</b><ul>'
    + risk.slice(0,8).map(r=>'<li><b>'+md(r.e.d)+'</b> · '+esc(r.e.t)+' · '+esc(r.e.x)
      +' &nbsp;<span style="color:#c0392b;font-weight:700">'+(r.it.eta?'재입고 '+md(r.it.eta)+' 이전':'재입고일 미정')+'</span></li>').join('')
    + '</ul>'+(risk.length>8?'<div style="margin-top:5px;font-size:12px">외 '+(risk.length-8)+'건</div>':'');
@@ -465,12 +455,12 @@ function renderList(){
   const b=document.getElementById('board');
   if(!S.items.length){
     b.innerHTML='<div class="empty" style="border-color:#cfe3d7;background:var(--green-l);color:#20503b">'
-      +'<b style="font-size:16px">현재 품절 · 입고예정 이슈가 없어요.</b><br>'
+      +'<b style="font-size:16px">🟢 현재 품절 · 입고예정 이슈가 없습니다.</b><br>'
       +'<span style="font-size:13px">품절 연락을 받으면 [+ 품절 상품 추가]로 등록하세요. 정상 상품은 여기에 담지 않습니다.</span></div>'
       +histHtml(); return;}
   if(!vis.length){b.innerHTML='<div class="empty">선택한 필터에 해당하는 건이 없습니다.</div>'+histHtml();return;}
   let h='',cur=null;
-  const T={out:'품절 · 액션 필요',soon:'입고 예정',ok:'재입고 완료 · 원복 확인'};
+  const T={out:'🔴 품절 — 액션 필요',soon:'🟠 입고 예정',ok:'🟢 재입고 완료 — 원복 확인'};
   vis.forEach(it=>{ if(it.st!==cur){cur=it.st;h+='<div class="sec">'+T[cur]+'<span class="bd"></span></div>';} h+=card(it); });
   b.innerHTML=h+histHtml(); bind();
 }
@@ -488,7 +478,7 @@ function renderSummary(){
   let h='<div class="sum"><div class="sh"><b>요약</b>'
    +'<span class="k">자사몰 '+c['카페24']+' · 스마트스토어 '+c['스마트스토어']+' · 기타 '+c['기타']+'</span>'
    +(noEta?'<span class="stt out">입고 예정일 미입력 '+noEta+'건</span>':'')
-   +'<span style="flex:1"></span><span class="k">'+(EDITABLE?'키워드 · 입고 예정일을 여기서 바로 수정할 수 있어요':'보기 전용 · 수정은 아래 카드에서')+'</span></div>'
+   +'<span style="flex:1"></span><span class="k">보기 전용 · 수정은 아래 카드에서</span></div>'
    +'<table class="st"><tr><th style="width:96px">채널</th><th>캘린더 키워드</th>'
    +'<th style="width:100px">상태</th><th style="width:200px">입고 예정일</th></tr>';
   let curCh=null;
@@ -496,26 +486,18 @@ function renderSummary(){
     const p=CATALOG.find(x=>x.id===it.id)||{n:it.id};
     const ch=chOfItem(it);
     if(ch!==curCh){curCh=ch;h+='<tr class="chrow"><td colspan="4">'+esc(chLabel(ch))+' · '+c[ch]+'건</td></tr>';}
-    const L={out:'품절',soon:'입고예정',ok:'재입고'};
+    const L={out:'🔴 품절',soon:'🟠 입고예정',ok:'🟢 재입고'};
     h+='<tr data-id="'+it.id+'">'
      +'<td><span class="badge '+(CHB[p.ch]||'b-etc')+'">'+esc(chLabel(ch))+'</span></td>'
      +'<td class="kwcell" title="'+esc(p.n)+'">'
-       +'<input type="text" class="s-kw" value="'+esc(it.kw||'')+'" placeholder="키워드 입력"'+(EDITABLE?'':' disabled')+'></td>'
+       +(kws(it).length?esc(kws(it).join(' · ')):'<span class="mini warn2">키워드 없음</span>')+'</td>'
      +'<td><span class="stt '+it.st+'">'+L[it.st]+'</span></td>'
      +'<td>'+(it.st==='ok'
          ? '<span class="mini">재입고 완료</span>'
-         : '<input type="date" class="s-eta" value="'+(it.eta||'')+'"'+(EDITABLE?'':' disabled')+'>'
-           +(it.eta?' <span class="mini">'+ddText(it)+'</span>':' <span class="mini warn2" style="margin-left:6px">미입력</span>'))+'</td>'
+         : (it.eta?'<b>'+md(it.eta)+'</b> <span class="mini">'+ddText(it)+'</span>':'<span class="mini warn2">미입력</span>'))+'</td>'
      +'</tr>';
   });
   el.innerHTML=h+'</table></div>';
-  if(EDITABLE) el.querySelectorAll('tr[data-id]').forEach(tr=>{
-    const it=S.items.find(x=>x.id===tr.dataset.id); if(!it)return;
-    const kw=tr.querySelector('.s-kw');
-    if(kw)kw.onchange=e=>{ it.kw=e.target.value; save(); setTimeout(render,0); };
-    const eta=tr.querySelector('.s-eta');
-    if(eta)eta.onchange=e=>{ it.eta=e.target.value; addLog(short(it)+' 재입고예정 '+(e.target.value||'-')); save(); setTimeout(render,0); };
-  });
 }
 function ddText(it){
   const d=diffDays(todayStr(),it.eta);
@@ -596,10 +578,10 @@ function card(it){
   if(p.sp)h+='<span>'+esc(p.sp)+'</span>';
   if(price)h+='<span>'+price+'</span>';
   if(p.oc)h+='<span>옵션 '+p.oc+'개</span>';
-  if(nEv)h+='<span style="color:#2c5282;font-weight:700">예정 일정 '+nEv+'건</span>';
+  if(nEv)h+='<span style="color:#2c5282;font-weight:700">🗓 예정 일정 '+nEv+'건</span>';
   h+='<span style="color:#b9b6b0">'+esc(it.id)+'</span>';
   if(it.st!=='ok')h+=dday(it);
-  linked(it).forEach(o=>{h+='<span class="linkch">'+esc(chLabel(chOfItem(o)))+' '+({out:'품절',soon:'입고예정',ok:'재입고'}[o.st])+'</span>';});
+  linked(it).forEach(o=>{h+='<span class="linkch">🔗 '+esc(chLabel(chOfItem(o)))+' '+({out:'품절',soon:'입고예정',ok:'재입고'}[o.st])+'</span>';});
   h+='</div></div>';
   /* 접었을 때도 진행 상황은 헤더에서 보이게 한다 */
   h+='<div class="hsum">';
@@ -633,8 +615,8 @@ function card(it){
     }
     if(it.st==='ok'){
       const rd=(done===total&&total>0);
-      h+='<div class="doneban"><span>'+(rd?'원복 액션을 모두 마쳤어요.':'원복 액션을 모두 체크하면 목록에서 내릴 수 있어요.')+'</span>'
-       +'<span style="flex:1"></span><button class="fin"'+(rd?' style="background:#2f6b4f;color:#fff;border-color:#2f6b4f;font-weight:600"':' disabled')+'>완료 · 목록에서 내리기</button></div>';
+      h+='<div class="doneban"><span>'+(rd?'✅ 원복 액션을 모두 마쳤습니다.':'원복 액션을 모두 체크하면 목록에서 내릴 수 있습니다.')+'</span>'
+       +'<span style="flex:1"></span><button class="fin"'+(rd?' style="background:#2f6b4f;color:#fff;border-color:#2f6b4f;font-weight:600"':' disabled')+'>✓ 완료 — 목록에서 내리기</button></div>';
     }
     h+='</div>';
   }
@@ -685,7 +667,7 @@ function bind(){
       const ban=el.querySelector('.doneban');
       if(ban){
         const rd=(t>0&&d===t), fb=ban.querySelector('.fin');
-        ban.querySelector('span').textContent = rd?'원복 액션을 모두 마쳤어요.':'원복 액션을 모두 체크하면 목록에서 내릴 수 있어요.';
+        ban.querySelector('span').textContent = rd?'✅ 원복 액션을 모두 마쳤습니다.':'원복 액션을 모두 체크하면 목록에서 내릴 수 있습니다.';
         fb.disabled=!rd;
         fb.setAttribute('style', rd?'background:#2f6b4f;color:#fff;border-color:#2f6b4f;font-weight:600':'');
         fb.onclick = rd?(()=>finish(it)):null;
@@ -718,7 +700,7 @@ function finish(it){
   S.history.unshift({id:it.id,n:p.n,ch:chOfItem(it),since:it.since||'',eta:it.eta||'',at:todayStr()});
   S.history=S.history.slice(0,60);
   S.items=S.items.filter(x=>x.id!==it.id);
-  addLog('['+chLabel(chOfItem(it))+'] '+short(it)+' 완료 처리 · 목록에서 내림');
+  addLog('['+chLabel(chOfItem(it))+'] '+short(it)+' 완료 처리 — 목록에서 내림');
   save(); render();
 }
 function drawLog(){document.getElementById('log').innerHTML=S.log.length?'<b>변경 이력</b>'+S.log.slice(0,12).map(l=>'<div>'+esc(l)+'</div>').join(''):'';}
@@ -744,7 +726,7 @@ function renderCal(){
     +'<span class="hint" style="margin:0 0 0 6px">탭을 켜고 끄면 표시가 바뀝니다</span>';
   document.querySelectorAll('#calbar input').forEach(c=>c.onchange=e=>{tabOn[e.target.dataset.t]=e.target.checked;renderCal();});
 
-  if(!curMonth){document.getElementById('calgrid').innerHTML='<div class="empty">캘린더 데이터가 없습니다. [캘린더 업데이트]로 불러오세요.</div>';return;}
+  if(!curMonth){document.getElementById('calgrid').innerHTML='<div class="empty">캘린더 데이터가 없습니다. [🗓 캘린더 업데이트]로 불러오세요.</div>';return;}
   const y=+curMonth.split('-')[0], m=+curMonth.split('-')[1], t=todayStr();
   const first=new Date(y,m-1,1), last=new Date(y,m,0).getDate(), pad=first.getDay();
   let h='<table class="cal"><tr>'+['일','월','화','수','목','금','토'].map((d,i)=>'<th class="'+(i===0?'sun':i===6?'sat':'')+'">'+d+'</th>').join('')+'</tr><tr>';
@@ -772,7 +754,6 @@ document.getElementById('btn-add').onclick=()=>{document.getElementById('m-add')
 function closeAdd(){document.getElementById('m-add').classList.remove('on');}
 document.getElementById('m-add').onclick=e=>{if(e.target.id==='m-add')closeAdd();};
 document.getElementById('q').oninput=e=>drawPicks(e.target.value);
-document.getElementById('q').onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); addAllPicks(); } };
 function drawPicks(q){
   q=q.trim().toLowerCase(); const have=new Set(S.items.map(i=>i.id));
   const r=CATALOG.filter(p=>(pickCh==='all'||chOf(p)===pickCh)
@@ -792,28 +773,6 @@ function drawPicks(q){
     addLog('['+chLabel(chOf(p))+'] '+p.n.slice(0,18)+' 품절 등록');
     save(); render(); drawPicks(document.getElementById('q').value);
   });
-  const addable=currentPickList().length;
-  const ab=document.getElementById('addall');
-  if(ab){ ab.disabled=!addable; ab.textContent=addable?('검색 결과 '+addable+'건 모두 추가'):'추가할 결과 없음'; }
-}
-/* 현재 검색어·채널 필터에 걸리면서 아직 안 담긴 상품 전부 */
-function currentPickList(){
-  const q=document.getElementById('q').value.trim().toLowerCase();
-  const have=new Set(S.items.map(i=>i.id));
-  return CATALOG.filter(p=>(pickCh==='all'||chOf(p)===pickCh)
-    &&(!q||p.n.toLowerCase().includes(q)||(p.sp||'').toLowerCase().includes(q)||p.id.toLowerCase().includes(q))
-    && !have.has(p.id));
-}
-/* 검색 결과를 한 번에 품절로 등록 */
-function addAllPicks(){
-  if(!EDITABLE) return;
-  const list=currentPickList();
-  if(!list.length){ alert('추가할 새 상품이 없어요.'); return; }
-  const q=document.getElementById('q').value.trim();
-  if(list.length>1 && !confirm(list.length+'건을 모두 품절로 등록할까요?'+(q?'\n("'+q+'" 검색 결과)':''))) return;
-  list.forEach(p=>S.items.push({id:p.id,st:'out',since:todayStr(),eta:'',memo:'',kw:(p.kw||[]).join(', '),done:[],doneAt:{},wasOut:true,open:true}));
-  addLog(list.length+'건 일괄 품절 등록'+(q?' ("'+q+'")':''));
-  save(); render(); drawPicks(document.getElementById('q').value);
 }
 document.getElementById('btn-fold').onclick=()=>setAllOpen(false);
 document.getElementById('btn-unfold').onclick=()=>setAllOpen(true);
@@ -852,9 +811,9 @@ document.getElementById('btn-copy').onclick=()=>{
     const p=CATALOG.find(x=>x.id===i.id)||{n:i.id};
     t+='\n['+chLabel(chOfItem(i))+']';
     let a=0,tt=0;(actionsFor(i)||[]).forEach(g=>g.items.forEach(x=>{tt++;if((i.done||[]).includes(x))a++;}));
-    t+=' '+(i.st==='out'?'[품절]':'[입고예정]')+' '+p.n+'\n   품절 '+(i.since||'-')+' / 재입고 '+(i.eta||'미정')+' / 액션 '+a+'/'+tt;
+    t+=' '+(i.st==='out'?'🔴':'🟠')+' '+p.n+'\n   품절 '+(i.since||'-')+' / 재입고 '+(i.eta||'미정')+' / 액션 '+a+'/'+tt;
     const risk=matchEvents(i).filter(e=>e.d>=todayStr()&&(!i.eta||e.d<i.eta));
-    if(risk.length)t+='\n   [주의] 재입고 전 편성: '+risk.slice(0,3).map(e=>md(e.d)+' '+e.x).join(' / ');
+    if(risk.length)t+='\n   ⚠ 재입고 전 편성: '+risk.slice(0,3).map(e=>md(e.d)+' '+e.x).join(' / ');
     if(i.memo)t+='\n   메모: '+i.memo;
   });
   navigator.clipboard.writeText(t).then(()=>alert('복사했습니다. 카톡·메일에 그대로 붙여넣으세요.'),()=>{prompt('아래를 복사하세요',t);});

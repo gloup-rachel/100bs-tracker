@@ -94,8 +94,10 @@ function roleOf(req) {
   /* 헤더는 ISO-8859-1만 담을 수 있어 클라이언트가 encodeURIComponent로 보낸다 */
   let pw = req.headers['x-bb-pw'] || '';
   try { pw = decodeURIComponent(pw); } catch (e) { /* 이미 평문이면 그대로 */ }
-  const admin = process.env.ADMIN_PW || '';
-  const team  = process.env.TEAM_PW  || '';
+  pw = String(pw).trim();
+  /* 환경변수에 줄바꿈·공백이 섞여 들어가는 사고가 잦아 양쪽 모두 trim 한다 */
+  const admin = String(process.env.ADMIN_PW || '').trim();
+  const team  = String(process.env.TEAM_PW  || '').trim();
   if (admin && pw === admin) return 'admin';
   if (team  && pw === team)  return 'team';
   return null;
